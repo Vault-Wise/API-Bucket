@@ -5,13 +5,6 @@ import platform
 import csv
 import boto3
 
-client = boto3.client(
-    service_name='s3',
-    aws_access_key_id='seu_access_key_id',
-    aws_secret_access_key='seu_secret_access_key',
-    region_name='eu-west-1' # voce pode usar qualquer regiao
-)
-
 nomeMaquina = gethostname()
 sistemaOperacional = platform.system()
 intervalo = int(input("Digite o intervalo do monitoramento: \n")) #setando o intervalo da captura
@@ -58,11 +51,7 @@ while True:
     
     with open('/home/presilli/Documentos/ProjetoGrupo/teste.csv', 'a', newline='') as csvfile:
         csv_writer = csv.writer(csvfile, delimiter=',')
-        csv_writer.writerow([porcent_cpu, round(freq_cpu), round(memoria.total/pow(10, 9), 2), round(memoria.used/pow(10, 9), 2), memoria.percent, round(disco.total/pow(10, 9), 2), round(disco.used/pow(10, 9), 2), disco.percent])
-
-    try:
-        response = client.upload_file('teste.csv', 'bucket', 'teste.csv')
-    except ClientError as e:
-        logging.error(e)
+        csv_writer.writerow([porcent_cpu, round(freq_cpu), round(memoria.total/pow(10, 9), 2), round(memoria.used/pow(10, 9), 2), memoria.percent, round(disco.total/pow(10, 9), 2), round(disco.used/pow(10, 9), 2), disco.percent])  
+    
     #Tempo de captura de dados
     time.sleep(intervalo)
