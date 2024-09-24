@@ -3,7 +3,6 @@ import time
 from socket import gethostname
 import platform
 import csv
-import boto3
 
 nomeMaquina = gethostname()
 sistemaOperacional = platform.system()
