@@ -4,7 +4,6 @@ from socket import gethostname
 import platform
 import csv
 import boto3
-from botocore.exceptions import NoCredentialsError
 
 nomeMaquina = gethostname()
 sistemaOperacional = platform.system()
@@ -20,12 +19,37 @@ nomeArquivoBucket = 'dadosMaquina-no-s3.csv'  # Nome que o arquivo terá no S3
 s3_client = boto3.client('s3')
 
 # Criar o arquivo CSV e escrever o cabeçalho uma vez
-with open(caminhoArquivo, 'w', newline='') as csvfile:
+with open('Seu CAMINHO', 'w', newline='') as csvfile:
     csv_writer = csv.writer(csvfile, delimiter=',')
     csv_writer.writerow(['Uso CPU (%)', 'Freq CPU (MHz)', 'Mem Total (GB)', 'Mem Usada (GB)', 'Uso Memória (%)', 'Disco Total (GB)', 'Disco Usado (GB)', 'Uso Disco (%)'])
 
 
-for i in range(qtdCapturas):
+def upload_to_s3(file_name, bucket, object_name=None):
+    # Se não foi especificado o nome do objeto no S3, usar o nome do arquivo
+    if object_name is None:
+        object_name = file_name
+
+    session = boto3.Session(
+        aws_access_key_id='',
+        aws_secret_access_key='',
+        aws_session_token= '',
+        region_name='us-east-1',    
+    )
+
+    s3_client = session.client('s3')
+
+
+    # Criar uma sessão e um cliente do S3
+    try:
+        # Realizar o upload
+        s3_client.upload_file(file_name, bucket, object_name)
+        print(f"Arquivo '{file_name}' enviado com sucesso para o bucket '{bucket}'!")
+    except FileNotFoundError:
+        print(f"Arquivo '{file_name}' não encontrado.")
+
+
+
+while True:
     #Variáveis de captura dos dados
     
     porcent_cpu = psutil.cpu_percent()
@@ -58,18 +82,12 @@ for i in range(qtdCapturas):
     Pressione Ctrl+C para encerrar a captura
     """.format(intervalo, porcent_cpu, round(freq_cpu),  memoria.total/pow(10, 9), memoria.percent, round(memoria.used/pow(10,9)), disco.total/pow(10, 9), disco.percent, round(disco.used/pow(10,9))))
     
-    with open(caminhoArquivo, 'a', newline='') as csvfile:
+    with open('Seu CAMINHO', 'a', newline='') as csvfile:
         csv_writer = csv.writer(csvfile, delimiter=',')
         csv_writer.writerow([porcent_cpu, round(freq_cpu), round(memoria.total/pow(10, 9), 2), round(memoria.used/pow(10, 9), 2), memoria.percent, round(disco.total/pow(10, 9), 2), round(disco.used/pow(10, 9), 2), disco.percent])  
     
     #Tempo de captura de dados
+    file_name = 'NOME DO AQRQUIVO NO '
+    bucket_name = 'bucket-raw-lab'
+    upload_to_s3(file_name, bucket_name)
     time.sleep(intervalo)
-
-try:
-    # Enviar arquivo ao S3
-    s3_client.upload_file(caminhoArquivo, nomeBucket, nomeArquivoBucket)
-    print(f"Arquivo {nomeArquivoBucket} enviado com sucesso ao bucket {nomeBucket}!")
-except NoCredentialsError:
-    print("Erro: Credenciais não encontradas.")
-except Exception as e:
-    print(f"Erro ao enviar arquivo: {e}")
