@@ -3,13 +3,12 @@
 # 3 º Passo - Conectar na EC2, e criar um ambiente virtual
 # Dentro desse ambiente virtual de python, tem que dar pip install boto3
 # Rodar o SCRIPT de PYTHON e mandar para o BUCKET
- 
 
 import psutil
 import time
+import json
 from socket import gethostname
 import platform
-import csv
 import boto3
 
 nomeMaquina = gethostname()
@@ -19,10 +18,7 @@ qtdCapturas = int(input("Digite quantas capturas deseja fazer: "))
 
 s3_client = boto3.client('s3')
 
-with open('SEU CAMINHO NA EC2', 'w', newline='') as csvfile:
-    csv_writer = csv.writer(csvfile, delimiter=',')
-    csv_writer.writerow(['Uso CPU (%)', 'Freq CPU (MHz)', 'Mem Total (GB)', 'Mem Usada (GB)', 'Uso Memória (%)', 'Disco Total (GB)', 'Disco Usado (GB)', 'Uso Disco (%)'])
-
+dados_monitoramento = []
 
 def upload_to_s3(file_name, bucket, object_name=None):
     if object_name is None:
@@ -32,7 +28,7 @@ def upload_to_s3(file_name, bucket, object_name=None):
         aws_access_key_id='',
         aws_secret_access_key='',
         aws_session_token= '',
-        region_name='us-east-1',    
+        region_name='us-east-1',
     )
 
     s3_client = session.client('s3')
@@ -44,44 +40,42 @@ def upload_to_s3(file_name, bucket, object_name=None):
         print(f"Arquivo '{file_name}' não encontrado.")
 
 
-
 for i in range(qtdCapturas):
     porcent_cpu = psutil.cpu_percent()
     memoria = psutil.virtual_memory()
     freq_cpu = psutil.cpu_freq().current
 
-    if(sistemaOperacional == "Windows"):
+    if sistemaOperacional == "Windows":
         disco = psutil.disk_usage('C:\\')
     else:
         disco = psutil.disk_usage('/')
     
+    captura = {
+        "captura": i + 1,
+        "intervalo": intervalo,
+        "porcCPU": porcent_cpu,
+        "FreqCpu": freq_cpu
+        ,
+        "totalMEM": round(memoria.total / pow(10, 9), 2),
+        "usadaMEM": round(memoria.used / pow(10, 9), 2),
+        "porcMEM": memoria.percent
+        ,
+        "totalDisc": round(disco.total / pow(10, 9), 2),
+        "usadoDisc": round(disco.used / pow(10, 9), 2),
+        "usoDisc": disco.percent
+    }
 
-    print(""" 
-    Captura {:.0f}
-             
-    (Dados sendo capturados a cada {:.2f}s)
-          
-    CPU:      
-    Porcentagem de uso da CPU: {:.2f}%
-    Freq CPU: {:f}
+    dados_monitoramento.append(captura)
+
+    print(f"Captura {i} realizada com sucesso.")
     
-    Memória (total = {:.2f} GB):
-    Porcentagem de uso memória RAM: {:.1f}
-    Memoria Usada: {:f} GB
-          
-    Disco Rígido (total = {:.2f} GB): 
-    Porcentagem de uso do disco: {:.1f}%
-    Disco usado: {:f} 
-          
-    Pressione Ctrl+C para encerrar a captura
-    """.format(i, intervalo, porcent_cpu, round(freq_cpu),  memoria.total/pow(10, 9), memoria.percent, round(memoria.used/pow(10,9)), disco.total/pow(10, 9), disco.percent, round(disco.used/pow(10,9))))
-    
-    with open('SEU CAMINHO NA EC2', 'a', newline='') as csvfile:
-        csv_writer = csv.writer(csvfile, delimiter=',')
-        csv_writer.writerow([porcent_cpu, round(freq_cpu), round(memoria.total/pow(10, 9), 2), round(memoria.used/pow(10, 9), 2), memoria.percent, round(disco.total/pow(10, 9), 2), round(disco.used/pow(10, 9), 2), disco.percent])  
-    
-   
-    file_name = 'NOME DO ARQUIVO QUE VAI PRO BUCKET'
-    bucket_name = 'bucket-raw-lab'
-    upload_to_s3(file_name, bucket_name)
     time.sleep(intervalo)
+
+# Salva os dados no arquivo JSON
+file_name = '/home/ubuntu/python3/DADOSKKKK.json'
+with open(file_name, 'w') as jsonfile:
+    json.dump(dados_monitoramento, jsonfile, indent=4)
+
+# Envia o arquivo JSON para o S3
+bucket_name = 'bucket-raw-lab'
+upload_to_s3(file_name, bucket_name)
