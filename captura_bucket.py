@@ -106,9 +106,9 @@ def adicionar_ao_json(file_name, novos_dados):
 
 def main():
     i = 0
-    intervalo = 10
-    upload_interval = 300
-    file_name = '/home/presilli/Documentos/ProjetoGrupo/dados.json'
+    intervalo = 15
+    intervaloBucket = 120
+    file_name = '/home/ubuntu/script-python/dados.json'
     
     while True:
         i += 1
@@ -118,8 +118,7 @@ def main():
         tempo_atividade = psutil.boot_time()
         upload_rate, download_rate = get_network_transfer_rate()
         dataHora = datetime.now()
-        data_e_hora_em_texto = dataHora.strftime('%d/%m/%Y %H:%M:%S')
-
+        dataHoraTexto = dataHora.strftime('%d/%m/%Y %H:%M:%S')
 
         upload_kbps = (upload_rate * 8) / 1024  # de bytes para kilobits
         download_kbps = (download_rate * 8) / 1024  # de bytes para kilobits
@@ -183,7 +182,7 @@ def main():
             repeticao_CPU+=1
 
             if(repeticao_CPU >= 5):
-                        
+
                 jira.issue_create(
                     fields={
                         'project': {
@@ -200,7 +199,7 @@ def main():
 
         captura = {
             "idCaixaEletronico": idEquipamento,
-            "dataHora": data_e_hora_em_texto,
+            "dataHora": dataHoraTexto,
             "tempo_atividade": round(uptime_s, 2),
             "intervalo": intervalo,
             "porcCPU": porcent_cpu,
@@ -218,8 +217,8 @@ def main():
         # Adiciona a captura ao arquivo JSON sem sobrescrever os dados existentes
         adicionar_ao_json(file_name, captura)
         
-        current_time = time.time()
-        if current_time - last_upload_time >= upload_interval:
+        current_time = time() 
+        if current_time - last_upload_time >= intervaloBucket:
             upload_to_s3(file_name, getenv('AWS_BUCKET_NAME'), s3_client)
             last_upload_time = current_time
 
