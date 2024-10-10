@@ -1,23 +1,23 @@
 import psutil
-import time
+from time import sleep,time
 import json
 from socket import gethostname
-import platform
-import os
+from platform import system
+from os import getenv, path 
 from dotenv import load_dotenv
-import boto3
+from boto3 import Session
+from datetime import datetime
 
 load_dotenv()
 
 nomeMaquina = gethostname()
-sistemaOperacional = platform.system()
+sistemaOperacional = system()
 
-# Inicializa cliente S3 uma vez
-session = boto3.Session(
-    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
-    aws_session_token=os.getenv('AWS_SESSION_TOKEN'),
-    region_name=os.getenv('AWS_REGION')
+session = Session(
+    aws_access_key_id=getenv('AWS_ACCESS_KEY_ID'),
+    aws_secret_access_key=getenv('AWS_SECRET_ACCESS_KEY'),
+    aws_session_token=getenv('AWS_SESSION_TOKEN'),
+    region_name=getenv('AWS_REGION')
 )
 s3_client = session.client('s3')
 
@@ -26,7 +26,7 @@ def get_network_transfer_rate(interval=1):
     bytes_sent_start = net_io_start.bytes_sent
     bytes_recv_start = net_io_start.bytes_recv
     
-    time.sleep(interval)
+    sleep(interval)
     
     net_io_end = psutil.net_io_counters()
     bytes_sent_end = net_io_end.bytes_sent
@@ -47,17 +47,17 @@ def upload_to_s3(file_name, bucket, s3_client):
         print(f"Erro ao enviar o arquivo para o S3: {e}")
 
 def ler_json_existente(file_name):
-    if os.path.exists(file_name):
+    if path.exists(file_name):
         with open(file_name, 'r') as json_file:
             try:
                 return json.load(json_file)
             except json.JSONDecodeError:
-                return []
+                return []  # Retorna uma lista vazia se o JSON estiver malformado
     return []
 
 def adicionar_ao_json(file_name, novos_dados):
-    dados_existentes = [ler_json_existente(file_name)]
-    dados_existentes.append(novos_dados)
+    dados_existentes = ler_json_existente(file_name)  
+    dados_existentes.append(novos_dados) 
     
     with open(file_name, 'w') as json_file:
         json.dump(dados_existentes, json_file, indent=4)
@@ -65,7 +65,7 @@ def adicionar_ao_json(file_name, novos_dados):
 def main():
     i = 0
     intervalo = 10
-    file_name = '/home/ubuntu/dadosMaquina.json'
+    file_name = '/home/presilli/Documentos/ProjetoGrupo/dados.json'
     
     while True:
         i += 1
@@ -74,11 +74,14 @@ def main():
         freq_cpu = psutil.cpu_freq().current
         tempo_atividade = psutil.boot_time()
         upload_rate, download_rate = get_network_transfer_rate()
+        dataHora = datetime.now()
+        data_e_hora_em_texto = dataHora.strftime('%d/%m/%Y %H:%M:%S')
+
 
         upload_kbps = (upload_rate * 8) / 1024  # de bytes para kilobits
         download_kbps = (download_rate * 8) / 1024  # de bytes para kilobits
 
-        tempo_atual = time.time()
+        tempo_atual = time()
         uptime_s = tempo_atual - tempo_atividade
 
         if sistemaOperacional == "Windows":
@@ -87,29 +90,29 @@ def main():
             disco = psutil.disk_usage('/')
 
         captura = {
-            "captura": i,
-            "tempo_atividade": uptime_s,
+            "dataHora": data_e_hora_em_texto,
+            "tempo_atividade": round(uptime_s, 2),
             "intervalo": intervalo,
             "porcCPU": porcent_cpu,
-            "freqCpu": freq_cpu,
-            "totalMEM": round(memoria.total / pow(10, 9), 2),
-            "usadaMEM": round(memoria.used / pow(10, 9), 2),
+            "freqCpu": round(freq_cpu, 2) ,
+            "totalMEM": round(memoria.total / (1024 ** 3), 2),
+            "usadaMEM": round(memoria.used / (1024 ** 3), 2),
             "porcMEM": memoria.percent,
-            "totalDisc": round(disco.total / pow(10, 9), 2),
-            "usadoDisc": round(disco.used / pow(10, 9), 2),
+            "totalDisc": round(disco.total / (1024 ** 3), 2),
+            "usadoDisc": round(disco.used / (1024 ** 3), 2),
             "usoDisc": disco.percent,
-            "upload_kbps": upload_kbps,
-            "download_kbps": download_kbps
+            "upload_kbps": round(upload_kbps, 2),
+            "download_kbps": round(download_kbps, 2)
         }
 
         # Adiciona a captura ao arquivo JSON sem sobrescrever os dados existentes
         adicionar_ao_json(file_name, captura)
         
         # Faz o upload para o S3
-        upload_to_s3(file_name='dados.json', bucket='bucket-raw-lab', s3_client=s3_client)
+        upload_to_s3(file_name, getenv('AWS_BUCKET_NAME'), s3_client)
 
         print(f"Captura {i} realizada com sucesso.")
-        time.sleep(intervalo)
+        sleep(intervalo)
 
 if __name__ == "__main__":
     main()
