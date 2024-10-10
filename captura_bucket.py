@@ -3,15 +3,28 @@ from time import sleep,time
 import json
 from socket import gethostname
 from platform import system
-from os import getenv, path 
+from os import getenv, path
 from dotenv import load_dotenv
 from boto3 import Session
 from datetime import datetime
-
+from mysql.connector import connect
+from atlassian import Jira
+from requests import HTTPError
 load_dotenv()
 
-nomeMaquina = gethostname()
-sistemaOperacional = system()
+jira = Jira(
+    url = getenv('URL_JIRA'), 
+    username = getenv('EMAIL_JIRA'),
+    password = getenv('TOKEN_JIRA')
+)
+
+mydb = connect(
+    user=getenv('USUARIO_BANCO'), 
+    password=getenv('SENHA_BANCO'), 
+    host=getenv('HOST_BANCO'),
+    database=getenv('NOME_BANCO'),
+    port=getenv('PORTA_BANCO')
+)
 
 session = Session(
     aws_access_key_id=getenv('AWS_ACCESS_KEY_ID'),
@@ -19,7 +32,36 @@ session = Session(
     aws_session_token=getenv('AWS_SESSION_TOKEN'),
     region_name=getenv('AWS_REGION')
 )
+
+cursor = mydb.cursor()
 s3_client = session.client('s3')
+
+nomeMaquina = gethostname()
+sistemaOperacional = system()
+
+freqTotalProcessador = round(psutil.cpu_freq().max, 2)
+memortiaTotal = round(psutil.virtual_memory().total/pow(10, 9),0)
+
+if(sistemaOperacional == "Windows"):
+    disco = psutil.disk_usage('C:\\')
+else:
+    disco = psutil.disk_usage('/')
+
+discoTotal = round(disco.total/pow(10, 9), 0)
+
+cursor.execute(f"SELECT * FROM CaixaEletronico WHERE nomeEquipamento = '{nomeMaquina}'")
+for i in cursor.fetchall():
+    print(i)
+
+if cursor.rowcount < 1: 
+    cursor.execute(f"INSERT INTO CaixaEletronico VALUES (default, '{nomeMaquina}', '{sistemaOperacional}', {memortiaTotal}, {discoTotal}, {freqTotalProcessador}, 1)") 
+    mydb.commit()
+    idEquipamento = cursor.lastrowid
+else: 
+    cursor.execute(f"SELECT idCaixa FROM CaixaEletronico WHERE nomeEquipamento LIKE '{nomeMaquina}'")
+    idEquipamento_tupla = cursor.fetchone()
+    idEquipamento = idEquipamento_tupla[0]
+
 
 def get_network_transfer_rate(interval=1):
     net_io_start = psutil.net_io_counters()
@@ -65,6 +107,7 @@ def adicionar_ao_json(file_name, novos_dados):
 def main():
     i = 0
     intervalo = 10
+    upload_interval = 300
     file_name = '/home/presilli/Documentos/ProjetoGrupo/dados.json'
     
     while True:
@@ -89,7 +132,74 @@ def main():
         else:
             disco = psutil.disk_usage('/')
 
+        if(round(porcent_cpu, 2) > 80 and round(memoria.percent, 2) > 80):
+            cursor.execute(f"INSERT INTO Alerta VALUES (DEFAULT, 'Memória e CPU', 'Ambos acima de 80%', {idRegistro}, {idEquipamento})")
+            mydb.commit()
+            repeticao_CPU_RAM+=1
+
+            if(repeticao_CPU_RAM >= 5):
+                    
+                jira.issue_create(
+                    fields={
+                        'project': {
+                            'key': 'VAULT' #SIGLA DO PROJETO
+                        },
+                        'summary': 'Alerta de CPU e RAM',
+                        'description': 'CPU e RAM acima da média, necessario olhar com atenção esse Caixa em específico caso precise de manutenção em breve',
+                        'issuetype': {
+                            "name": "Task"
+                        },
+                    }
+                )
+                repeticao_CPU_RAM=0
+
+        elif (round(memoria.percent, 2) > 80):
+            cursor.execute(f"INSERT INTO Alerta VALUES (DEFAULT, 'Memória', 'Memória RAM acima de 80%', {idRegistro}, {idEquipamento})")
+            mydb.commit()
+            repeticao_RAM+=1
+
+            if(repeticao_RAM >= 5):
+                try:
+                    jira.issue_create(
+                        fields={
+                        'project': {
+                            'key': 'VAULT' #SIGLA DO PROJETO
+                        },
+                        'summary': 'Alerta de RAM',
+                        'description': 'Memória RAM acima da média, analisar comportamento estranho e verificar se é frequente',
+                        'issuetype': {
+                            "name": "Task"
+                        },
+                    }
+                )
+                except HTTPError as e:
+                    print(e.response.text)
+
+                repeticao_RAM=0
+
+        elif(round(porcent_cpu, 2) > 80):
+            cursor.execute(f"INSERT INTO Alerta VALUES (DEFAULT, 'CPU', 'CPU acima de 80%', {idRegistro}, {idEquipamento})")
+            mydb.commit()
+            repeticao_CPU+=1
+
+            if(repeticao_CPU >= 5):
+                        
+                jira.issue_create(
+                    fields={
+                        'project': {
+                            'key': 'VAULT' #SIGLA DO PROJETO
+                        },
+                        'summary': 'Alerta de CPU',
+                        'description': 'Processador acima da média, possível ataque no Caixa ou erro de Hardware.',
+                        'issuetype': {
+                            "name": "Task"
+                        },
+                    }
+                )
+            repeticao_CPU=0
+
         captura = {
+            "idCaixaEletronico": idEquipamento,
             "dataHora": data_e_hora_em_texto,
             "tempo_atividade": round(uptime_s, 2),
             "intervalo": intervalo,
@@ -108,8 +218,10 @@ def main():
         # Adiciona a captura ao arquivo JSON sem sobrescrever os dados existentes
         adicionar_ao_json(file_name, captura)
         
-        # Faz o upload para o S3
-        upload_to_s3(file_name, getenv('AWS_BUCKET_NAME'), s3_client)
+        current_time = time.time()
+        if current_time - last_upload_time >= upload_interval:
+            upload_to_s3(file_name, getenv('AWS_BUCKET_NAME'), s3_client)
+            last_upload_time = current_time
 
         print(f"Captura {i} realizada com sucesso.")
         sleep(intervalo)
