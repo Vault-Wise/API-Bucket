@@ -158,8 +158,8 @@ def main():
             repeticao_RAM+=1
 
             if(repeticao_RAM >= 5):
-                try:
-                    jira.issue_create(
+                
+                jira.issue_create(
                         fields={
                         'project': {
                             'key': 'VAULT' #SIGLA DO PROJETO
@@ -171,9 +171,7 @@ def main():
                         },
                     }
                 )
-                except HTTPError as e:
-                    print(e.response.text)
-
+                
                 repeticao_RAM=0
 
         elif(round(porcent_cpu, 2) > 80):
@@ -200,16 +198,15 @@ def main():
         captura = {
             "idCaixaEletronico": idEquipamento,
             "dataHora": dataHoraTexto,
-            "tempo_atividade": round(uptime_s, 2),
-            "intervalo": intervalo,
+            "tempo_atividade": round(uptime_s, 2),\
             "porcCPU": porcent_cpu,
             "freqCpu": round(freq_cpu, 2) ,
-            "totalMEM": round(memoria.total / (1024 ** 3), 2),
-            "usadaMEM": round(memoria.used / (1024 ** 3), 2),
-            "porcMEM": memoria.percent,
+            "totalMem": round(memoria.total / (1024 ** 3), 2),
+            "usadaMem": round(memoria.used / (1024 ** 3), 2),
+            "porcMem": memoria.percent,
             "totalDisc": round(disco.total / (1024 ** 3), 2),
             "usadoDisc": round(disco.used / (1024 ** 3), 2),
-            "usoDisc": disco.percent,
+            "porcDisc": disco.percent,
             "upload_kbps": round(upload_kbps, 2),
             "download_kbps": round(download_kbps, 2)
         }
