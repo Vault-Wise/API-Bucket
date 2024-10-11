@@ -39,21 +39,14 @@ nomeMaquina = gethostname()
 sistemaOperacional = system()
 
 freqTotalProcessador = round(psutil.cpu_freq().max, 2)
-memortiaTotal = round(psutil.virtual_memory().total/pow(10, 9),0)
-
-if(sistemaOperacional == "Windows"):
-    disco = psutil.disk_usage('C:\\')
-else:
-    disco = psutil.disk_usage('/')
-
-discoTotal = round(disco.total/pow(10, 9), 0)
+memoriaTotal = round(psutil.virtual_memory().total/pow(10, 9),0)
 
 cursor.execute(f"SELECT * FROM CaixaEletronico WHERE nomeEquipamento = '{nomeMaquina}'")
 for i in cursor.fetchall():
     print(i)
 
 if cursor.rowcount < 1: 
-    cursor.execute(f"INSERT INTO CaixaEletronico VALUES (default, '{nomeMaquina}', '{sistemaOperacional}', {memortiaTotal}, {discoTotal}, {freqTotalProcessador}, 1)") 
+    cursor.execute(f"INSERT INTO CaixaEletronico VALUES (default, '{nomeMaquina}', '{sistemaOperacional}', {memoriaTotal}, {freqTotalProcessador}, 1)") 
     mydb.commit()
     idEquipamento = cursor.lastrowid
 else: 
@@ -107,7 +100,7 @@ def main():
     i = 0
     intervalo = 15
     intervaloBucket = 120
-    file_name = '/home/ubuntu/script-python/dados.json'
+    file_name = '/home/presilli/Documentos/ProjetoGrupo/dados.json'
     
     while True:
         i += 1
@@ -125,10 +118,10 @@ def main():
         tempo_atual = time()
         uptime_s = tempo_atual - tempo_atividade
 
-        if sistemaOperacional == "Windows":
-            disco = psutil.disk_usage('C:\\')
-        else:
-            disco = psutil.disk_usage('/')
+        cursor.execute(f"""INSERT INTO Registro (idRegistro, dtHora, percentMemoria, percentProcessador, memoriaUsada,  freqProcessador, velocidadeUpload, velocidadeDowload, tempoAtividade, fkCaixa) VALUES (DEFAULT, DEFAULT, {round(memoria.percent, 2)}, {round(porcent_cpu, 2)}, {round(memoria.used /pow(10,9), 2)}, {round(freq_cpu)}, {round(upload_kbps, 2)},
+        {round(download_kbps, 2)}, {uptime_s}, {idEquipamento})""")
+        mydb.commit()
+        idRegistro = cursor.lastrowid
 
         if(round(porcent_cpu, 2) > 80 and round(memoria.percent, 2) > 80):
             cursor.execute(f"INSERT INTO Alerta VALUES (DEFAULT, 'Memória e CPU', 'Ambos acima de 80%', {idRegistro}, {idEquipamento})")
@@ -149,6 +142,7 @@ def main():
                         },
                     }
                 )
+
                 repeticao_CPU_RAM=0
 
         elif (round(memoria.percent, 2) > 80):
@@ -192,20 +186,17 @@ def main():
                         },
                     }
                 )
-            repeticao_CPU=0
+
+                repeticao_CPU=0
 
         captura = {
             "idCaixaEletronico": idEquipamento,
             "dataHora": dataHoraTexto,
             "tempo_atividade": round(uptime_s, 2),\
             "porcCPU": porcent_cpu,
-            "freqCpu": round(freq_cpu, 2) ,
-            "totalMem": round(memoria.total / (1024 ** 3), 2),
+            "freqCpu": round(freq_cpu, 2),
             "usadaMem": round(memoria.used / (1024 ** 3), 2),
             "porcMem": memoria.percent,
-            "totalDisc": round(disco.total / (1024 ** 3), 2),
-            "usadoDisc": round(disco.used / (1024 ** 3), 2),
-            "porcDisc": disco.percent,
             "upload_kbps": round(upload_kbps, 2),
             "download_kbps": round(download_kbps, 2)
         }
@@ -214,9 +205,9 @@ def main():
         adicionar_ao_json(file_name, captura)
         
         current_time = time() 
-        if current_time - last_upload_time >= intervaloBucket:
-            upload_to_s3(file_name, getenv('AWS_BUCKET_NAME'), s3_client)
-            last_upload_time = current_time
+        # if current_time - last_upload_time >= intervaloBucket:
+        #     upload_to_s3(file_name, getenv('AWS_BUCKET_NAME'), s3_client)
+        #     last_upload_time = current_time
 
         print(f"Captura {i} realizada com sucesso.")
         sleep(intervalo)
