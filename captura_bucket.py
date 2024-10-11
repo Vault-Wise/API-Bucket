@@ -124,7 +124,7 @@ def main():
         idRegistro = cursor.lastrowid
 
         if(round(porcent_cpu, 2) > 80 and round(memoria.percent, 2) > 80):
-            cursor.execute(f"INSERT INTO Alerta VALUES (DEFAULT, 'Memória e CPU', 'Ambos acima de 80%', {idRegistro}, {idEquipamento})")
+            cursor.execute(f"INSERT INTO Alerta VALUES (DEFAULT, 'Memória e CPU', 'Ambos acima de 80%', DEFAULT, {idRegistro}, {idEquipamento})")
             mydb.commit()
             repeticao_CPU_RAM+=1
 
@@ -146,7 +146,7 @@ def main():
                 repeticao_CPU_RAM=0
 
         elif (round(memoria.percent, 2) > 80):
-            cursor.execute(f"INSERT INTO Alerta VALUES (DEFAULT, 'Memória', 'Memória RAM acima de 80%', {idRegistro}, {idEquipamento})")
+            cursor.execute(f"INSERT INTO Alerta VALUES (DEFAULT, 'Memória', 'Memória RAM acima de 80%', DEFAULT, {idRegistro}, {idEquipamento})")
             mydb.commit()
             repeticao_RAM+=1
 
@@ -168,7 +168,7 @@ def main():
                 repeticao_RAM=0
 
         elif(round(porcent_cpu, 2) > 80):
-            cursor.execute(f"INSERT INTO Alerta VALUES (DEFAULT, 'CPU', 'CPU acima de 80%', {idRegistro}, {idEquipamento})")
+            cursor.execute(f"INSERT INTO Alerta VALUES (DEFAULT, 'CPU', 'CPU acima de 80%', DEFAULT, {idRegistro}, {idEquipamento})")
             mydb.commit()
             repeticao_CPU+=1
 
