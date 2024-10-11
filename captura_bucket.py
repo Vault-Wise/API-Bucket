@@ -9,7 +9,6 @@ from boto3 import Session
 from datetime import datetime
 from mysql.connector import connect
 from atlassian import Jira
-from requests import HTTPError
 load_dotenv()
 
 jira = Jira(
