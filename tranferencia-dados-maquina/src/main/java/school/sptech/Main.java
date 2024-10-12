@@ -17,7 +17,7 @@ public class Main implements RequestHandler<S3Event, String> {
     private final AmazonS3 s3Client = AmazonS3ClientBuilder.defaultClient();
 
     // Bucket de destino para o CSV gerado
-    private static final String DESTINATION_BUCKET = "bucket-raw-lab";
+    private static final String DESTINATION_BUCKET = "s3-trusted-vaultwise";
 
     @Override
     public String handleRequest(S3Event s3Event, Context context) {
@@ -32,11 +32,11 @@ public class Main implements RequestHandler<S3Event, String> {
 
             // Conversão do JSON para uma lista de objetos Stock usando o Mapper
             Mapper mapper = new Mapper();
-            List<Maquina> stocks = mapper.map(s3InputStream);
+            List<Maquina> maquinas = mapper.map(s3InputStream);
 
             // Geração do arquivo CSV a partir da lista de Stock usando o CsvWriter
             EscritorCsv csvWriter = new EscritorCsv();
-            ByteArrayOutputStream csvOutputStream = csvWriter.writeCsv(stocks);
+            ByteArrayOutputStream csvOutputStream = csvWriter.writeCsv(maquinas);
 
             // Converte o ByteArrayOutputStream para InputStream para enviar ao bucket de destino
             InputStream csvInputStream = new ByteArrayInputStream(csvOutputStream.toByteArray());

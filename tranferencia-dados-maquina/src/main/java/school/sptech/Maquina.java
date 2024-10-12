@@ -3,6 +3,11 @@ package school.sptech;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.time.DayOfWeek;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Maquina {
     private Integer idCaixaEletronico;
@@ -17,23 +22,11 @@ public class Maquina {
     @JsonProperty("freqCpu")
     private Double frequenciaCPU;
 
-    @JsonProperty("totalMem")
-    private Double totalMemoria;
-
     @JsonProperty("usadaMem")
     private Double memoriaUsada;
 
     @JsonProperty("porcMem")
     private Double porcentagemMemoria;
-
-    @JsonProperty("totalDisc")
-    private Double totalDisco;
-
-    @JsonProperty("usadoDisc")
-    private Double discoUsado;
-
-    @JsonProperty("porcDisc")
-    private Double porcentagemDisco;
 
     @JsonProperty("upload_kbps")
     private Double velocidadeUpload;
@@ -81,14 +74,6 @@ public class Maquina {
         this.frequenciaCPU = frequenciaCPU;
     }
 
-    public Double getTotalMemoria() {
-        return totalMemoria;
-    }
-
-    public void setTotalMemoria(Double totalMemoria) {
-        this.totalMemoria = totalMemoria;
-    }
-
     public Double getMemoriaUsada() {
         return memoriaUsada;
     }
@@ -103,30 +88,6 @@ public class Maquina {
 
     public void setPorcentagemMemoria(Double porcentagemMemoria) {
         this.porcentagemMemoria = porcentagemMemoria;
-    }
-
-    public Double getTotalDisco() {
-        return totalDisco;
-    }
-
-    public void setTotalDisco(Double totalDisco) {
-        this.totalDisco = totalDisco;
-    }
-
-    public Double getDiscoUsado() {
-        return discoUsado;
-    }
-
-    public void setDiscoUsado(Double discoUsado) {
-        this.discoUsado = discoUsado;
-    }
-
-    public Double getPorcentagemDisco() {
-        return porcentagemDisco;
-    }
-
-    public void setPorcentagemDisco(Double porcentagemDisco) {
-        this.porcentagemDisco = porcentagemDisco;
     }
 
     public Double getVelocidadeUpload() {
@@ -146,5 +107,33 @@ public class Maquina {
     }
 
     public Maquina() {
+    }
+
+    public String getData() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+        LocalDateTime dateTime = LocalDateTime.parse(this.dataHora, formatter);
+        return dateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+    }
+
+    public String getHora() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+        LocalDateTime dateTime = LocalDateTime.parse(dataHora, formatter);
+        return dateTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+    }
+
+    public String getDiaDaSemana() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+        LocalDateTime dateTime = LocalDateTime.parse(this.dataHora, formatter);
+        DayOfWeek diaDaSemana = dateTime.getDayOfWeek();
+
+        Locale locale = new Locale("pt", "BR");
+        String diaDaSemanaTexto = diaDaSemana.getDisplayName(java.time.format.TextStyle.FULL, locale);
+        diaDaSemanaTexto = diaDaSemanaTexto.substring(0, 1).toUpperCase().concat(diaDaSemanaTexto.substring(1));
+
+        return diaDaSemanaTexto;
+    }
+
+    public Double getTempoEmMinutos() {
+        return (double) Math.round(this.tempoAtividade / 60);
     }
 }
