@@ -71,11 +71,12 @@ def get_network_transfer_rate(interval=1):
     
     return bytes_sent_per_sec, bytes_recv_per_sec
 
-def upload_to_s3(file_name, bucket, s3_client):
+def upload_to_s3(file_name, bucket, s3_client, folder_name="dadosMaquina"):
     try:
         file_base_name = path.basename(file_name)  # Extraí apenas o nome do arquivo
-        s3_client.upload_file(file_name, bucket, file_base_name)
-        print(f"Arquivo '{file_base_name}' enviado com sucesso para o bucket '{bucket}'!")
+        s3_file_path = f"{folder_name}/{file_base_name}"  # Define o caminho completo no S3
+        s3_client.upload_file(file_name, bucket, s3_file_path)
+        print(f"Arquivo '{file_base_name}' enviado com sucesso para a pasta '{folder_name}' no bucket '{bucket}'!")
     except FileNotFoundError:
         print(f"Arquivo '{file_name}' não encontrado.")
     except Exception as e:
@@ -105,7 +106,7 @@ def main():
     i = 0
     last_upload_time = time()
     intervalo = 15
-    intervaloBucket = 20
+    intervaloBucket = 45
     file_name = '/home/ubuntu/script-python/dados.json'
     
     while True:
@@ -212,7 +213,7 @@ def main():
         
         current_time = time() 
         if current_time - last_upload_time >= intervaloBucket:
-            upload_to_s3(file_name, getenv('AWS_BUCKET_NAME'), s3_client)
+            upload_to_s3(file_name, getenv('AWS_BUCKET_NAME'), s3_client, folder_name="dadosMaquina")
             last_upload_time = current_time
 
         print(f"Captura {i} realizada com sucesso.")
