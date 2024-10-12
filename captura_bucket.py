@@ -73,12 +73,14 @@ def get_network_transfer_rate(interval=1):
 
 def upload_to_s3(file_name, bucket, s3_client):
     try:
-        s3_client.upload_file(file_name, bucket, file_name)
-        print(f"Arquivo '{file_name}' enviado com sucesso para o bucket '{bucket}'!")
+        file_base_name = path.basename(file_name)  # Extraí apenas o nome do arquivo
+        s3_client.upload_file(file_name, bucket, file_base_name)
+        print(f"Arquivo '{file_base_name}' enviado com sucesso para o bucket '{bucket}'!")
     except FileNotFoundError:
         print(f"Arquivo '{file_name}' não encontrado.")
     except Exception as e:
         print(f"Erro ao enviar o arquivo para o S3: {e}")
+
 
 def ler_json_existente(file_name):
     if path.exists(file_name):
@@ -97,10 +99,14 @@ def adicionar_ao_json(file_name, novos_dados):
         json.dump(dados_existentes, json_file, indent=4)
 
 def main():
+    repeticao_CPU_RAM = 0
+    repeticao_CPU = 0
+    repeticao_RAM = 0
     i = 0
+    last_upload_time = time()
     intervalo = 15
-    intervaloBucket = 120
-    file_name = '/home/presilli/Documentos/ProjetoGrupo/dados.json'
+    intervaloBucket = 20
+    file_name = '/home/ubuntu/script-python/dados.json'
     
     while True:
         i += 1
@@ -205,9 +211,9 @@ def main():
         adicionar_ao_json(file_name, captura)
         
         current_time = time() 
-        # if current_time - last_upload_time >= intervaloBucket:
-        #     upload_to_s3(file_name, getenv('AWS_BUCKET_NAME'), s3_client)
-        #     last_upload_time = current_time
+        if current_time - last_upload_time >= intervaloBucket:
+            upload_to_s3(file_name, getenv('AWS_BUCKET_NAME'), s3_client)
+            last_upload_time = current_time
 
         print(f"Captura {i} realizada com sucesso.")
         sleep(intervalo)
