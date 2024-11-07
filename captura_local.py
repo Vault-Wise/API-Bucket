@@ -67,11 +67,8 @@ def main():
     repeticao_CPU = 0
     repeticao_RAM = 0
     i = 0
-    last_upload_time = time()
-    intervalo = 15
-    intervaloBucket = 45
-    file_name = '/home/ubuntu/script-python/dados.json'
-    
+    intervalo = 2
+   
     while True:
         i += 1
         porcent_cpu = psutil.cpu_percent()
