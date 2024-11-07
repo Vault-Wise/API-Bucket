@@ -1,54 +1,165 @@
-# 1 º Passo - Trocar as variáveis com o que está escrito nela
-# 2 º Passo - Mandar esse script pra EC2
-# 3 º Passo - Conectar na EC2, e criar um ambiente virtual
-# Dentro desse ambiente virtual de python, tem que dar pip install boto3
-# Rodar o SCRIPT de PYTHON e mandar para o BUCKET
-
 import psutil
-import time
-import json
+from time import sleep,time
 from socket import gethostname
-import platform
+from platform import system
+from os import getenv, path
+from dotenv import load_dotenv
+from datetime import datetime
+from mysql.connector import connect
+from atlassian import Jira
+load_dotenv()
+
+jira = Jira(
+    url = getenv('URL_JIRA'), 
+    username = getenv('EMAIL_JIRA'),
+    password = getenv('TOKEN_JIRA')
+)
+
+mydb = connect(
+    user=getenv('USUARIO_BANCO'), 
+    password=getenv('SENHA_BANCO'), 
+    host=getenv('HOST_BANCO'),
+    database=getenv('NOME_BANCO'),
+    port=getenv('PORTA_BANCO')
+)
+
+cursor = mydb.cursor()
+
 
 nomeMaquina = gethostname()
-sistemaOperacional = platform.system()
-intervalo = int(input("Digite o intervalo do monitoramento: \n")) 
-qtdCapturas = int(input("Digite quantas capturas deseja fazer: "))
+sistemaOperacional = system()
 
-dados_monitoramento = []
+freqTotalProcessador = round(psutil.cpu_freq().max, 2)
+memoriaTotal = round(psutil.virtual_memory().total/pow(10, 9),0)
 
-for i in range(qtdCapturas):
-    porcent_cpu = psutil.cpu_percent()
-    memoria = psutil.virtual_memory()
-    freq_cpu = psutil.cpu_freq().current
+cursor.execute(f"SELECT * FROM CaixaEletronico WHERE nomeEquipamento = '{nomeMaquina}'")
+for i in cursor.fetchall():
+    print(i)
 
-    if sistemaOperacional == "Windows":
-        disco = psutil.disk_usage('C:\\')
-    else:
-        disco = psutil.disk_usage('/')
+if cursor.rowcount < 1: 
+    cursor.execute(f"INSERT INTO CaixaEletronico VALUES (default, '{nomeMaquina}', '{sistemaOperacional}', {memoriaTotal}, {freqTotalProcessador}, 1)") 
+    mydb.commit()
+    idEquipamento = cursor.lastrowid
+else: 
+    cursor.execute(f"SELECT idCaixa FROM CaixaEletronico WHERE nomeEquipamento LIKE '{nomeMaquina}'")
+    idEquipamento_tupla = cursor.fetchone()
+    idEquipamento = idEquipamento_tupla[0]
+
+
+def get_network_transfer_rate(interval=1):
+    net_io_start = psutil.net_io_counters()
+    bytes_sent_start = net_io_start.bytes_sent
+    bytes_recv_start = net_io_start.bytes_recv
     
-    captura = {
-        "captura": i + 1,
-        "intervalo": intervalo,
-        "porcCPU": porcent_cpu,
-        "FreqCpu": freq_cpu
-        ,
-        "totalMEM": round(memoria.total / pow(10, 9), 2),
-        "usadaMEM": round(memoria.used / pow(10, 9), 2),
-        "porcMEM": memoria.percent
-        ,
-        "totalDisc": round(disco.total / pow(10, 9), 2),
-        "usadoDisc": round(disco.used / pow(10, 9), 2),
-        "usoDisc": disco.percent
-    }
-
-    dados_monitoramento.append(captura)
-
-    print(f"Captura {i} realizada com sucesso.")
+    sleep(interval)
     
-    time.sleep(intervalo)
+    net_io_end = psutil.net_io_counters()
+    bytes_sent_end = net_io_end.bytes_sent
+    bytes_recv_end = net_io_end.bytes_recv
+    
+    bytes_sent_per_sec = (bytes_sent_end - bytes_sent_start) / interval
+    bytes_recv_per_sec = (bytes_recv_end - bytes_recv_start) / interval
+    
+    return bytes_sent_per_sec, bytes_recv_per_sec
 
-# Salva os dados no arquivo JSON
-file_name = 'DIRETORIO'
-with open(file_name, 'w') as jsonfile:
-    json.dump(dados_monitoramento, jsonfile, indent=4)
+def main():
+    repeticao_CPU_RAM = 0
+    repeticao_CPU = 0
+    repeticao_RAM = 0
+    i = 0
+    last_upload_time = time()
+    intervalo = 15
+    intervaloBucket = 45
+    file_name = '/home/ubuntu/script-python/dados.json'
+    
+    while True:
+        i += 1
+        porcent_cpu = psutil.cpu_percent()
+        memoria = psutil.virtual_memory()
+        freq_cpu = psutil.cpu_freq().current
+        tempo_atividade = psutil.boot_time()
+        upload_rate, download_rate = get_network_transfer_rate()
+        
+        upload_kbps = (upload_rate * 8) / 1024  # de bytes para kilobits
+        download_kbps = (download_rate * 8) / 1024  # de bytes para kilobits
+
+        tempo_atual = time()
+        uptime_s = tempo_atual - tempo_atividade
+
+        cursor.execute(f"""INSERT INTO Registro (idRegistro, dtHora, percentMemoria, percentProcessador, memoriaUsada,  freqProcessador, velocidadeUpload, velocidadeDowload, tempoAtividade, fkCaixa) VALUES (DEFAULT, DEFAULT, {round(memoria.percent, 2)}, {round(porcent_cpu, 2)}, {round(memoria.used /pow(10,9), 2)}, {round(freq_cpu)}, {round(upload_kbps, 2)},
+        {round(download_kbps, 2)}, {uptime_s}, {idEquipamento})""")
+        mydb.commit()
+        idRegistro = cursor.lastrowid
+
+        if(round(porcent_cpu, 2) > 80 and round(memoria.percent, 2) > 80):
+            cursor.execute(f"INSERT INTO Alerta VALUES (DEFAULT, 'Memória e CPU', 'Ambos acima de 80%', DEFAULT, {idRegistro}, {idEquipamento})")
+            mydb.commit()
+            repeticao_CPU_RAM+=1
+
+            if(repeticao_CPU_RAM >= 5):
+                    
+                jira.issue_create(
+                    fields={
+                        'project': {
+                            'key': 'VAULT' #SIGLA DO PROJETO
+                        },
+                        'summary': 'Alerta de CPU e RAM',
+                        'description': 'CPU e RAM acima da média, necessario olhar com atenção esse Caixa em específico caso precise de manutenção em breve',
+                        'issuetype': {
+                            "name": "Task"
+                        },
+                    }
+                )
+
+                repeticao_CPU_RAM=0
+
+        elif (round(memoria.percent, 2) > 80):
+            cursor.execute(f"INSERT INTO Alerta VALUES (DEFAULT, 'Memória', 'Memória RAM acima de 80%', DEFAULT, {idRegistro}, {idEquipamento})")
+            mydb.commit()
+            repeticao_RAM+=1
+
+            if(repeticao_RAM >= 5):
+                
+                jira.issue_create(
+                        fields={
+                        'project': {
+                            'key': 'VAULT' #SIGLA DO PROJETO
+                        },
+                        'summary': 'Alerta de RAM',
+                        'description': 'Memória RAM acima da média, analisar comportamento estranho e verificar se é frequente',
+                        'issuetype': {
+                            "name": "Task"
+                        },
+                    }
+                )
+                
+                repeticao_RAM=0
+
+        elif(round(porcent_cpu, 2) > 80):
+            cursor.execute(f"INSERT INTO Alerta VALUES (DEFAULT, 'CPU', 'CPU acima de 80%', DEFAULT, {idRegistro}, {idEquipamento})")
+            mydb.commit()
+            repeticao_CPU+=1
+
+            if(repeticao_CPU >= 5):
+
+                jira.issue_create(
+                    fields={
+                        'project': {
+                            'key': 'VAULT' #SIGLA DO PROJETO
+                        },
+                        'summary': 'Alerta de CPU',
+                        'description': 'Processador acima da média, possível ataque no Caixa ou erro de Hardware.',
+                        'issuetype': {
+                            "name": "Task"
+                        },
+                    }
+                )
+
+                repeticao_CPU=0
+
+        # Adiciona a captura ao arquivo JSON sem sobrescrever os dados existentes
+        print(f"Captura {i} realizada com sucesso.")
+        sleep(intervalo)
+
+if __name__ == "__main__":
+    main()
