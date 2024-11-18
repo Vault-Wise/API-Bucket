@@ -9,6 +9,7 @@ from boto3 import Session
 from datetime import datetime
 from mysql.connector import connect
 from atlassian import Jira
+from collections import defaultdict
 load_dotenv()
 
 jira = Jira(
@@ -71,6 +72,37 @@ def get_network_transfer_rate(interval=1):
     
     return bytes_sent_per_sec, bytes_recv_per_sec
 
+def get_processos_ativos(idRegistro):
+    for processo in psutil.process_iter(attrs=['pid', 'name']):
+        processo.cpu_percent(interval=None)
+    
+    sleep(1)
+
+    num_nucleos = psutil.cpu_count(logical=True)
+
+    processos = defaultdict(lambda: {'cpu': 0.0, 'mem': 0.0, 'pids': set()})
+
+    for processo in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'memory_percent']):
+        try:
+            pid = processo.info['pid']
+            nome_processo = processo.info['name'].split('/')[-1].split(' ')[0] 
+            uso_cpu = processo.info['cpu_percent'] / num_nucleos 
+            uso_mem = processo.info['memory_percent']
+
+            if uso_cpu > 0.2:
+                processos[nome_processo]['cpu'] += uso_cpu
+                processos[nome_processo]['mem'] += uso_mem
+                processos[nome_processo]['pids'].add(pid) 
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass
+
+    for nome_processo, valores in processos.items():
+        cursor.execute(f"INSERT INTO Processo VALUES (DEFAULT, {valores['cpu']:.2f}, {valores['mem']:.2f}, DEFAULT, {idRegistro}, {idEquipamento})") 
+        print("Cadastrando processo ")
+        idProcesso = cursor.lastrowid
+        for pid in valores['pids']:
+            cursor.execute(f"INSERT INTO PID VALUES (DEFAULT, {pid}, {2}, {idProcesso}, {idRegistro}, {idEquipamento})")
+
 def upload_to_s3(file_name, bucket, s3_client, folder_name="dadosMaquina"):
     try:
         file_base_name = path.basename(file_name)  # Extraí apenas o nome do arquivo
@@ -105,8 +137,10 @@ def main():
     repeticao_RAM = 0
     i = 0
     last_upload_time = time()
+    last_upload_time_processo = time()
     intervalo = 15
     intervaloBucket = 45
+    intervalo_processos = 15
     file_name = '/home/ubuntu/script-python/dados.json'
     
     while True:
@@ -212,6 +246,10 @@ def main():
         adicionar_ao_json(file_name, captura)
         
         current_time = time() 
+        if current_time - last_upload_time_processo >= intervalo_processos:
+            get_processos_ativos(idRegistro)
+            last_upload_time_processo = current_time
+
         if current_time - last_upload_time >= intervaloBucket:
             upload_to_s3(file_name, getenv('AWS_BUCKET_NAME'), s3_client, folder_name="dadosMaquina")
             last_upload_time = current_time
