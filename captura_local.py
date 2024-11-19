@@ -80,16 +80,18 @@ def get_processos_ativos(idRegistro):
             uso_cpu = processo.info['cpu_percent'] / num_nucleos 
             uso_mem = processo.info['memory_percent']
 
-            if uso_cpu > 0.2:
+            if uso_cpu > 0.4:
                 processos[nome_processo]['cpu'] += uso_cpu
                 processos[nome_processo]['mem'] += uso_mem
                 processos[nome_processo]['pids'].add(pid) 
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
-
+        
+    i = 0
     for nome_processo, valores in processos.items():
-        cursor.execute(f"INSERT INTO Processo VALUES (DEFAULT, {valores['cpu']:.2f}, {valores['mem']:.2f}, DEFAULT, {idRegistro}, {idEquipamento})") 
-        print("Cadastrando processo ")
+        i += 1
+        print(f"Cadastrando processo {i}")
+        cursor.execute(f"INSERT INTO Processo VALUES (DEFAULT, '{nome_processo}', {valores['cpu']:.2f}, {valores['mem']:.2f}, DEFAULT, {idRegistro}, {idEquipamento})") 
         idProcesso = cursor.lastrowid
         for pid in valores['pids']:
             cursor.execute(f"INSERT INTO PID VALUES (DEFAULT, {pid}, {2}, {idProcesso}, {idRegistro}, {idEquipamento})")
