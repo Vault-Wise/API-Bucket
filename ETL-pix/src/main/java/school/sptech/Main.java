@@ -17,7 +17,7 @@ public class Main implements RequestHandler<S3Event, String> {
     private final AmazonS3 s3Client = AmazonS3ClientBuilder.defaultClient();
 
     // Bucket de destino para o CSV gerado
-    private static final String DESTINATION_BUCKET = "s3-trusted-vaultwise";
+    private static final String DESTINATION_BUCKET = "bucket-trusted-passini";
 
     @Override
     public String handleRequest(S3Event s3Event, Context context) {
@@ -29,8 +29,17 @@ public class Main implements RequestHandler<S3Event, String> {
         try {
             InputStream s3InputStream = s3Client.getObject(sourceBucket, sourceKey).getObjectContent();
 
-            Mapper mapper = new Mapper();
-            List<Pix> pixs = mapper.map(s3InputStream);
+            List<Pix> pixs;
+
+            if (sourceKey.endsWith(".csv")){
+                System.out.println("Mapper CSV acionado");
+                MapperCSV mapper = new MapperCSV();
+                pixs = mapper.map(s3InputStream);
+            } else{
+                System.out.println("Mapper JSON acionado");
+                MapperJson mapper = new MapperJson();
+                pixs = mapper.map(s3InputStream);
+            }
 
             CsvWriter csvWriter = new CsvWriter();
             ByteArrayOutputStream csvOutputStream = csvWriter.writeCsv(pixs);
