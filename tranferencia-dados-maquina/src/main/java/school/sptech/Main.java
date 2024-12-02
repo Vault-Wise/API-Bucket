@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.S3Event;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import org.apache.commons.io.FilenameUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -27,6 +28,7 @@ public class Main implements RequestHandler<S3Event, String> {
         String sourceKey = s3Event.getRecords().get(0).getS3().getObject().getKey();
 
         try {
+
             // Leitura do arquivo JSON do bucket de origem
             InputStream s3InputStream = s3Client.getObject(sourceBucket, sourceKey).getObjectContent();
 
@@ -36,13 +38,18 @@ public class Main implements RequestHandler<S3Event, String> {
 
             // Geração do arquivo CSV a partir da lista de Stock usando o CsvWriter
             EscritorCsv csvWriter = new EscritorCsv();
-            ByteArrayOutputStream csvOutputStream = csvWriter.writeCsv(maquinas);
+            EscritorExcel excelWriter = new EscritorExcel();
+
+            ByteArrayOutputStream csvOutputStream = csvWriter.escreverArquivo(maquinas);
+            ByteArrayOutputStream excelOutputStream = excelWriter.escreverArquivo(maquinas);
 
             // Converte o ByteArrayOutputStream para InputStream para enviar ao bucket de destino
             InputStream csvInputStream = new ByteArrayInputStream(csvOutputStream.toByteArray());
+            InputStream excelInputStream = new ByteArrayInputStream(excelOutputStream.toByteArray());
 
             // Envio do CSV para o bucket de destino
             s3Client.putObject(DESTINATION_BUCKET, sourceKey.replace(".json", ".csv"), csvInputStream, null);
+            s3Client.putObject(DESTINATION_BUCKET, sourceKey.replace(".json", ".xls"), excelInputStream, null);
 
             return "Sucesso no processamento";
         } catch (Exception e) {
@@ -50,5 +57,10 @@ public class Main implements RequestHandler<S3Event, String> {
             context.getLogger().log("Erro: " + e.getMessage());
             return "Erro no processamento";
         }
+    }
+
+
+    public String getFileExtensionUsingCommons(String fileName) {
+        return FilenameUtils.getExtension(fileName);
     }
 }

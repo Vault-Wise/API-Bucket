@@ -7,7 +7,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MapperCSV extends Mapper{
+public class MapperCSV extends Mapper {
     List<Pix> map(InputStream inputStream) throws IOException {
         List<Pix> pixFormat = new ArrayList<>();
         String linha;
@@ -15,11 +15,11 @@ public class MapperCSV extends Mapper{
 
         System.out.println("Classe mapperCSV acessada");
 
-        try(BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))){
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
             // Pulando cabeçalho
             br.readLine();
 
-            while ((linha = br.readLine()) != null){
+            while ((linha = br.readLine()) != null) {
                 Pix pix = getData(linha, separador);
                 pixFormat.add(pix);
             }
@@ -29,7 +29,7 @@ public class MapperCSV extends Mapper{
     }
 
     // Mapeando conteúdo do CSV e transformando em objeto
-    public Pix getData(String linha, String separador){
+    public Pix getData(String linha, String separador) {
         String[] dados = linha.split(separador);
 
         // Mapeando dados através de gets da classe

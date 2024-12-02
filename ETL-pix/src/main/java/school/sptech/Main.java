@@ -31,11 +31,11 @@ public class Main implements RequestHandler<S3Event, String> {
 
             List<Pix> pixs;
 
-            if (sourceKey.endsWith(".csv")){
+            if (sourceKey.endsWith(".csv")) {
                 System.out.println("Mapper CSV acionado");
                 MapperCSV mapper = new MapperCSV();
                 pixs = mapper.map(s3InputStream);
-            } else{
+            } else {
                 System.out.println("Mapper JSON acionado");
                 MapperJson mapper = new MapperJson();
                 pixs = mapper.map(s3InputStream);
