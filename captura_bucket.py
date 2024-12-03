@@ -166,71 +166,85 @@ def main():
         mydb.commit()
         idRegistro = cursor.lastrowid
 
-        if(round(porcent_cpu, 2) > 80 and round(memoria.percent, 2) > 80):
-            cursor.execute(f"INSERT INTO Alerta VALUES (DEFAULT, 'Memória e CPU', 'Ambos acima de 80%', DEFAULT, {idRegistro}, {idEquipamento})")
-            mydb.commit()
-            repeticao_CPU_RAM+=1
 
-            if(repeticao_CPU_RAM >= 5):
-                    
-                jira.issue_create(
-                    fields={
-                        'project': {
-                            'key': 'VAULT' #SIGLA DO PROJETO
-                        },
-                        'summary': 'Alerta de CPU e RAM',
-                        'description': 'CPU e RAM acima da média, necessario olhar com atenção esse Caixa em específico caso precise de manutenção em breve',
-                        'issuetype': {
-                            "name": "Task"
-                        },
-                    }
-                )
+        # Verificação e categorização dos alertas
+        if porcent_cpu > 80 and memoria.percent > 80:
+            cursor.execute(f"""INSERT INTO Alerta 
+                VALUES (DEFAULT, 'Perigo', 'Ambos acima de 80%', DEFAULT, {idRegistro}, {idEquipamento})""")
+            repeticao_CPU_RAM += 1
+        elif 50 < porcent_cpu <= 80 and 50 < memoria.percent <= 80:
+            cursor.execute(f"""INSERT INTO Alerta 
+                VALUES (DEFAULT, 'Alerta', 'Ambos entre 50% e 80%', DEFAULT, {idRegistro}, {idEquipamento})""")
+        elif memoria.percent > 80:
+            cursor.execute(f"""INSERT INTO Alerta 
+                VALUES (DEFAULT, 'Perigo', 'Memória RAM acima de 80%', DEFAULT, {idRegistro}, {idEquipamento})""")
+            repeticao_RAM += 1
+        elif 50 < memoria.percent <= 80:
+            cursor.execute(f"""INSERT INTO Alerta 
+                VALUES (DEFAULT, 'Alerta', 'Memória RAM entre 50% e 80%', DEFAULT, {idRegistro}, {idEquipamento})""")
+        elif porcent_cpu > 80:
+            cursor.execute(f"""INSERT INTO Alerta 
+                VALUES (DEFAULT, 'Perigo', 'CPU acima de 80%', DEFAULT, {idRegistro}, {idEquipamento})""")
+            repeticao_CPU += 1
+        elif 50 < porcent_cpu <= 80:
+            cursor.execute(f"""INSERT INTO Alerta 
+                VALUES (DEFAULT, 'Alerta', 'CPU entre 50% e 80%', DEFAULT, {idRegistro}, {idEquipamento})""")
+        
+        mydb.commit()
 
-                repeticao_CPU_RAM=0
+            
 
-        elif (round(memoria.percent, 2) > 80):
-            cursor.execute(f"INSERT INTO Alerta VALUES (DEFAULT, 'Memória', 'Memória RAM acima de 80%', DEFAULT, {idRegistro}, {idEquipamento})")
-            mydb.commit()
-            repeticao_RAM+=1
+        if(repeticao_CPU_RAM >= 5):            
+            jira.issue_create(
+                fields={
+                    'project': {
+                        'key': 'VAULT' #SIGLA DO PROJETO
+                    },
+                    'summary': 'Alerta de CPU e RAM',
+                    'description': 'CPU e RAM acima da média, necessario olhar com atenção esse Caixa em específico caso precise de manutenção em breve',
+                    'issuetype': {
+                    "name": "Task"
+                    },
+                }
+            )
 
-            if(repeticao_RAM >= 5):
+            repeticao_CPU_RAM=0
+
+    
+
+        elif(repeticao_RAM >= 5):        
+            jira.issue_create(
+                fields= {
+                'project': {
+                    'key': 'VAULT' #SIGLA DO PROJETO
+                },
+                'summary': 'Alerta de RAM',
+                'description': 'Memória RAM acima da média, analisar comportamento estranho e verificar se é frequente',
+                'issuetype': {
+                "name": "Task"
+                },
+                }
+            )
                 
-                jira.issue_create(
-                        fields={
-                        'project': {
-                            'key': 'VAULT' #SIGLA DO PROJETO
-                        },
-                        'summary': 'Alerta de RAM',
-                        'description': 'Memória RAM acima da média, analisar comportamento estranho e verificar se é frequente',
-                        'issuetype': {
-                            "name": "Task"
-                        },
-                    }
-                )
-                
-                repeticao_RAM=0
+            repeticao_RAM=0
 
-        elif(round(porcent_cpu, 2) > 80):
-            cursor.execute(f"INSERT INTO Alerta VALUES (DEFAULT, 'CPU', 'CPU acima de 80%', DEFAULT, {idRegistro}, {idEquipamento})")
-            mydb.commit()
-            repeticao_CPU+=1
 
-            if(repeticao_CPU >= 5):
 
-                jira.issue_create(
-                    fields={
-                        'project': {
-                            'key': 'VAULT' #SIGLA DO PROJETO
-                        },
-                        'summary': 'Alerta de CPU',
-                        'description': 'Processador acima da média, possível ataque no Caixa ou erro de Hardware.',
-                        'issuetype': {
-                            "name": "Task"
-                        },
-                    }
-                )
+        elif(repeticao_CPU >= 5):
+            jira.issue_create(
+                fields={
+                    'project': {
+                        'key': 'VAULT' #SIGLA DO PROJETO
+                    },
+                    'summary': 'Alerta de CPU',
+                    'description': 'Processador acima da média, possível ataque no Caixa ou erro de Hardware.',
+                    'issuetype': {
+                    "name": "Task"
+                    },
+                }
+            )
 
-                repeticao_CPU=0
+            repeticao_CPU=0
 
         captura = {
             "idCaixaEletronico": idEquipamento,
