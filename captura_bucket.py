@@ -89,22 +89,26 @@ def get_processos_ativos(idRegistro):
             uso_cpu = processo.info['cpu_percent'] / num_nucleos 
             uso_mem = processo.info['memory_percent']
 
-            if uso_cpu > 0.5:
+            if uso_cpu > 0.2:
                 processos[nome_processo]['cpu'] += uso_cpu
                 processos[nome_processo]['mem'] += uso_mem
                 processos[nome_processo]['pids'].add(pid) 
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
-
-        i = 0
+        
+    i = 0
     for nome_processo, valores in processos.items():
         i += 1
         print(f"Cadastrando processo {i}")
         cursor.execute(f"INSERT INTO Processo VALUES (DEFAULT, '{nome_processo}', {valores['cpu']:.2f}, {valores['mem']:.2f}, DEFAULT, {idRegistro}, {idEquipamento})") 
         idProcesso = cursor.lastrowid
-        for pid in valores['pids']:
-            cursor.execute(f"INSERT INTO PID VALUES (DEFAULT, {pid}, {2}, {idProcesso}, {idRegistro}, {idEquipamento})")
-
+        if nome_processo == "idea": 
+            for pid in valores['pids']:
+                cursor.execute(f"INSERT INTO PID VALUES (DEFAULT, {pid}, {3}, {idProcesso}, {idRegistro}, {idEquipamento})")
+        else:
+            for pid in valores['pids']:
+                cursor.execute(f"INSERT INTO PID VALUES (DEFAULT, {pid}, {1}, {idProcesso}, {idRegistro}, {idEquipamento})")
+        
 def upload_to_s3(file_name, bucket, s3_client, folder_name="dadosMaquina"):
     try:
         file_base_name = path.basename(file_name)  # Extraí apenas o nome do arquivo
