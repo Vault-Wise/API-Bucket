@@ -7,9 +7,10 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-public class EscritorCsv {
+public class EscritorCsv implements EscritorArquivo {
 
-    public ByteArrayOutputStream writeCsv(List<Maquina> maquinas) throws IOException {
+    @Override
+    public ByteArrayOutputStream escreverArquivo(List<Maquina> maquinas) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));

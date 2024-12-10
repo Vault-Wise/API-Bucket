@@ -1,0 +1,101 @@
+Data,RegiaoPagamento,RegiaoRecebimento,IdadePagamento,IdadeRecebimento,Valor,Quantidade,ValorTransacao
+01-2023,Nao informado,CENTRO-OESTE,Nao se aplica,entre 30 e 39 anos,10.0,1,10.0
+01-2023,SUL,Nao informado,Nao se aplica,entre 20 e 29 anos,2857.58,27,105.84
+01-2023,NORDESTE,Nao informado,Nao se aplica,mais de 60 anos,52.36,2,26.18
+01-2023,Nao informado,NORTE,entre 50 e 59 anos,até 19 anos,3481.0,33,105.48
+01-2023,CENTRO-OESTE,SUDESTE,entre 30 e 39 anos,Nao se aplica,4217.19,7,602.46
+01-2023,SUL,CENTRO-OESTE,mais de 60 anos,entre 20 e 29 anos,6965124.92,13223,526.74
+01-2023,SUDESTE,SUDESTE,entre 30 e 39 anos,Nao se aplica,"131.147.641.347.000.000.000,00",2403383,545.68
+01-2023,NORDESTE,NORTE,entre 30 e 39 anos,entre 40 e 49 anos,5778419.53,30035,192.39
+01-2023,NORTE,SUDESTE,entre 40 e 49 anos,entre 40 e 49 anos,41559.3,171,243.04
+01-2023,Nao informado,NORTE,Nao informado,entre 30 e 39 anos,"2.688.369,00",67,138.21
+02-2023,CENTRO-OESTE,NORDESTE,entre 30 e 39 anos,entre 30 e 39 anos,1148814.13,27622,41.59
+02-2023,NORTE,Nao informado,entre 40 e 49 anos,Nao informado,1000.0,2,500.0
+02-2023,NORDESTE,NORDESTE,Nao informado,Nao se aplica,20.0,1,20.0
+02-2023,CENTRO-OESTE,CENTRO-OESTE,entre 20 e 29 anos,até 19 anos,696807.89,11986,58.14
+02-2023,NORDESTE,SUDESTE,entre 50 e 59 anos,Nao se aplica,122464.41,186,658.41
+02-2023,NORTE,NORDESTE,mais de 60 anos,entre 20 e 29 anos,1107.37,25,44.29
+02-2023,SUL,NORTE,Nao se aplica,até 19 anos,220.0,6,36.67
+02-2023,CENTRO-OESTE,SUDESTE,entre 40 e 49 anos,entre 50 e 59 anos,"39.690.884.460.000.000,00",102876,385.81
+02-2023,NORTE,NORTE,entre 50 e 59 anos,Nao se aplica,7673.25,30,255.78
+02-2023,SUDESTE,CENTRO-OESTE,entre 20 e 29 anos,entre 40 e 49 anos,"32.968.087.420.000.000,00",152172,216.65
+03-2023,CENTRO-OESTE,NORDESTE,entre 20 e 29 anos,mais de 60 anos,46452.38,2039,22.78
+03-2023,NORTE,SUDESTE,até 19 anos,mais de 60 anos,7792.42,505,15.43
+03-2023,SUDESTE,NORTE,entre 50 e 59 anos,entre 40 e 49 anos,3353075.74,7803,429.72
+03-2023,Nao informado,Nao informado,entre 20 e 29 anos,entre 20 e 29 anos,385044.35,1005,383.13
+03-2023,SUL,NORTE,até 19 anos,até 19 anos,1290.0,50,25.8
+03-2023,NORDESTE,CENTRO-OESTE,Nao se aplica,entre 50 e 59 anos,"13.899.769.260.000.000,00",2033,6837.07
+03-2023,NORTE,NORTE,entre 50 e 59 anos,mais de 60 anos,"32.251.951.710.000.000,00",105330,306.2
+03-2023,NORDESTE,NORTE,Nao se aplica,entre 40 e 49 anos,"26.214.957.310.000.000,00",5840,4488.86
+03-2023,CENTRO-OESTE,SUDESTE,entre 50 e 59 anos,Nao se aplica,"713.655,00",12,321.09
+03-2023,NORDESTE,NORTE,até 19 anos,mais de 60 anos,35582.9,712,49.98
+04-2023,CENTRO-OESTE,SUL,entre 20 e 29 anos,Nao se aplica,512305.82,1554,329.67
+04-2023,NORDESTE,SUDESTE,entre 30 e 39 anos,mais de 60 anos,163134.12,435,375.02
+04-2023,SUDESTE,SUDESTE,entre 40 e 49 anos,Nao se aplica,"1.263.519.558.000.000.000,00",1997744,632.47
+04-2023,SUL,SUL,Nao se aplica,mais de 60 anos,"9.371.823.841.200.000.000,00",198066,4731.67
+04-2023,NORTE,NORTE,Nao se aplica,entre 20 e 29 anos,"7.722.277.780.000.000,00",122310,631.37
+04-2023,CENTRO-OESTE,NORTE,mais de 60 anos,Nao se aplica,735922.76,3265,225.4
+04-2023,NORTE,SUL,mais de 60 anos,até 19 anos,82.05,8,10.26
+04-2023,NORTE,NORTE,Nao se aplica,entre 50 e 59 anos,833.0,4,208.25
+04-2023,SUL,NORDESTE,entre 40 e 49 anos,até 19 anos,179860.52,2287,78.64
+04-2023,NORTE,NORTE,Nao se aplica,entre 50 e 59 anos,778783.46,4161,187.16
+05-2023,NORDESTE,NORTE,Nao se aplica,mais de 60 anos,"12.835.040.040.000.000,00",10660,1204.04
+05-2023,SUL,Nao informado,entre 40 e 49 anos,entre 30 e 39 anos,2159951.64,4550,474.71
+05-2023,CENTRO-OESTE,CENTRO-OESTE,entre 50 e 59 anos,entre 20 e 29 anos,1275428.39,25742,49.55
+05-2023,Nao informado,SUL,Nao se aplica,Nao se aplica,104.12,1,104.12
+05-2023,SUL,NORTE,entre 50 e 59 anos,Nao se aplica,1081662.45,3610,299.63
+05-2023,NORDESTE,NORDESTE,entre 50 e 59 anos,mais de 60 anos,"99.224.255.650.000.000,00",316660,313.35
+05-2023,Nao informado,Nao informado,entre 40 e 49 anos,entre 20 e 29 anos,94519.38,514,183.89
+05-2023,Nao informado,NORTE,até 19 anos,entre 30 e 39 anos,150.9,16,9.43
+05-2023,CENTRO-OESTE,SUDESTE,mais de 60 anos,Nao se aplica,2276.51,9,252.95
+05-2023,NORDESTE,Nao informado,até 19 anos,entre 40 e 49 anos,348.5,18,19.36
+06-2023,SUDESTE,NORTE,entre 40 e 49 anos,entre 40 e 49 anos,5471734.15,17371,314.99
+06-2023,Nao informado,SUL,entre 40 e 49 anos,Nao se aplica,2202773.56,672,3277.94
+06-2023,SUL,NORTE,entre 30 e 39 anos,entre 50 e 59 anos,1222138.41,4390,278.39
+06-2023,NORDESTE,SUL,entre 30 e 39 anos,mais de 60 anos,62724.45,2138,29.34
+06-2023,NORTE,NORDESTE,entre 40 e 49 anos,Nao se aplica,4607600.91,13554,339.94
+06-2023,SUL,SUDESTE,Nao se aplica,até 19 anos,2702.62,11,245.69
+06-2023,NORTE,NORTE,Nao se aplica,entre 40 e 49 anos,2105491.1,10369,203.06
+06-2023,NORDESTE,SUL,entre 50 e 59 anos,entre 20 e 29 anos,8583.24,141,60.87
+06-2023,Nao informado,NORDESTE,Nao informado,entre 30 e 39 anos,107.0,5,21.4
+06-2023,SUL,NORDESTE,entre 50 e 59 anos,Nao se aplica,3200.0,1,3200.0
+07-2023,SUDESTE,CENTRO-OESTE,Nao se aplica,até 19 anos,4923.66,102,48.27
+07-2023,SUL,SUDESTE,Nao se aplica,entre 20 e 29 anos,175550.66,1220,143.89
+07-2023,NORDESTE,SUL,entre 50 e 59 anos,entre 30 e 39 anos,8842.96,70,126.33
+07-2023,Nao informado,NORDESTE,entre 50 e 59 anos,entre 20 e 29 anos,47498.03,136,349.25
+07-2023,SUDESTE,CENTRO-OESTE,entre 40 e 49 anos,até 19 anos,124031.36,1742,71.2
+07-2023,Nao informado,NORTE,entre 30 e 39 anos,Nao se aplica,"1.776.541,00",28,241.57
+07-2023,SUL,NORDESTE,entre 50 e 59 anos,entre 30 e 39 anos,"17.428.569.530.000.000,00",71537,243.63
+07-2023,SUL,SUDESTE,entre 40 e 49 anos,entre 30 e 39 anos,2422175.95,26605,91.04
+07-2023,SUL,SUL,Nao se aplica,Nao se aplica,548.84,2,274.42
+07-2023,NORTE,SUDESTE,entre 50 e 59 anos,entre 20 e 29 anos,1539314.69,9119,168.8
+08-2023,NORTE,CENTRO-OESTE,entre 40 e 49 anos,Nao se aplica,"1.258.214.180.000.000,00",56471,222.81
+08-2023,NORDESTE,Nao informado,entre 50 e 59 anos,Nao se aplica,"2.029.410,00",30,248.54
+08-2023,CENTRO-OESTE,SUL,entre 20 e 29 anos,entre 30 e 39 anos,512056.12,12713,40.28
+08-2023,SUDESTE,NORDESTE,mais de 60 anos,Nao se aplica,"66.067.152.570.000.000,00",88370,747.62
+08-2023,SUL,NORDESTE,entre 20 e 29 anos,Nao se aplica,1572.95,16,98.31
+08-2023,NORDESTE,SUL,até 19 anos,entre 40 e 49 anos,15048.75,107,140.64
+08-2023,NORDESTE,SUL,até 19 anos,mais de 60 anos,365110.67,4051,90.13
+08-2023,SUDESTE,SUL,entre 20 e 29 anos,entre 30 e 39 anos,1672577.4,50208,33.31
+08-2023,CENTRO-OESTE,SUDESTE,entre 30 e 39 anos,entre 20 e 29 anos,8599067.43,51525,166.89
+08-2023,SUL,SUL,até 19 anos,entre 30 e 39 anos,4293955.11,139704,30.74
+09-2023,SUDESTE,NORTE,mais de 60 anos,Nao informado,663.9,2,331.95
+09-2023,NORDESTE,NORTE,entre 20 e 29 anos,entre 40 e 49 anos,574676.94,25686,22.37
+09-2023,SUL,NORTE,entre 20 e 29 anos,até 19 anos,11199.82,307,36.48
+09-2023,SUL,SUL,entre 40 e 49 anos,entre 40 e 49 anos,879006.63,1982,443.49
+09-2023,CENTRO-OESTE,SUL,entre 40 e 49 anos,Nao se aplica,"16.465.524.090.000.000,00",122527,134.38
+09-2023,SUDESTE,SUL,mais de 60 anos,entre 40 e 49 anos,33369.56,94,355.0
+09-2023,SUDESTE,SUDESTE,entre 20 e 29 anos,Nao se aplica,7224204.24,38836,186.02
+09-2023,NORTE,CENTRO-OESTE,entre 30 e 39 anos,Nao se aplica,120.0,2,60.0
+09-2023,SUDESTE,Nao informado,entre 50 e 59 anos,entre 50 e 59 anos,3176384.05,3356,946.48
+09-2023,SUL,NORTE,Nao se aplica,entre 50 e 59 anos,20127.89,14,1437.71
+10-2023,NORDESTE,NORDESTE,entre 50 e 59 anos,entre 40 e 49 anos,1137140.57,6062,187.59
+10-2023,SUDESTE,NORTE,Nao se aplica,entre 20 e 29 anos,"5.775.632.643.400.000.000,00",3787756,152.48
+10-2023,SUL,CENTRO-OESTE,até 19 anos,entre 50 e 59 anos,858804.86,5652,151.95
+10-2023,NORDESTE,CENTRO-OESTE,entre 50 e 59 anos,entre 30 e 39 anos,138349.22,3598,38.45
+10-2023,Nao informado,SUL,entre 40 e 49 anos,entre 40 e 49 anos,25718.58,259,99.3
+10-2023,SUL,NORDESTE,entre 50 e 59 anos,mais de 60 anos,4682868.64,10400,450.28
+10-2023,NORTE,CENTRO-OESTE,entre 20 e 29 anos,Nao se aplica,"1.219.637,00",37,141.6
+10-2023,NORTE,NORDESTE,entre 30 e 39 anos,entre 20 e 29 anos,7826454.88,70042,111.74
+10-2023,SUL,CENTRO-OESTE,Nao se aplica,Nao se aplica,"8.367.329.343.900.000.000,00",97082,8618.83
+10-2023,CENTRO-OESTE,SUDESTE,entre 30 e 39 anos,entre 30 e 39 anos,"1.316.961.719.600.000.000,00",432409,304.56

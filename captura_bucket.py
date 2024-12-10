@@ -89,22 +89,26 @@ def get_processos_ativos(idRegistro):
             uso_cpu = processo.info['cpu_percent'] / num_nucleos 
             uso_mem = processo.info['memory_percent']
 
-            if uso_cpu > 0.5:
+            if uso_cpu > 0.2:
                 processos[nome_processo]['cpu'] += uso_cpu
                 processos[nome_processo]['mem'] += uso_mem
                 processos[nome_processo]['pids'].add(pid) 
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
-
-        i = 0
+        
+    i = 0
     for nome_processo, valores in processos.items():
         i += 1
         print(f"Cadastrando processo {i}")
         cursor.execute(f"INSERT INTO Processo VALUES (DEFAULT, '{nome_processo}', {valores['cpu']:.2f}, {valores['mem']:.2f}, DEFAULT, {idRegistro}, {idEquipamento})") 
         idProcesso = cursor.lastrowid
-        for pid in valores['pids']:
-            cursor.execute(f"INSERT INTO PID VALUES (DEFAULT, {pid}, {2}, {idProcesso}, {idRegistro}, {idEquipamento})")
-
+        if nome_processo == "idea": 
+            for pid in valores['pids']:
+                cursor.execute(f"INSERT INTO PID VALUES (DEFAULT, {pid}, {3}, {idProcesso}, {idRegistro}, {idEquipamento})")
+        else:
+            for pid in valores['pids']:
+                cursor.execute(f"INSERT INTO PID VALUES (DEFAULT, {pid}, {1}, {idProcesso}, {idRegistro}, {idEquipamento})")
+        
 def upload_to_s3(file_name, bucket, s3_client, folder_name="dadosMaquina"):
     try:
         file_base_name = path.basename(file_name)  # Extraí apenas o nome do arquivo
@@ -166,71 +170,85 @@ def main():
         mydb.commit()
         idRegistro = cursor.lastrowid
 
-        if(round(porcent_cpu, 2) > 80 and round(memoria.percent, 2) > 80):
-            cursor.execute(f"INSERT INTO Alerta VALUES (DEFAULT, 'Memória e CPU', 'Ambos acima de 80%', DEFAULT, {idRegistro}, {idEquipamento})")
-            mydb.commit()
-            repeticao_CPU_RAM+=1
 
-            if(repeticao_CPU_RAM >= 5):
-                    
-                jira.issue_create(
-                    fields={
-                        'project': {
-                            'key': 'VAULT' #SIGLA DO PROJETO
-                        },
-                        'summary': 'Alerta de CPU e RAM',
-                        'description': 'CPU e RAM acima da média, necessario olhar com atenção esse Caixa em específico caso precise de manutenção em breve',
-                        'issuetype': {
-                            "name": "Task"
-                        },
-                    }
-                )
+        # Verificação e categorização dos alertas
+        if porcent_cpu > 80 and memoria.percent > 80:
+            cursor.execute(f"""INSERT INTO Alerta 
+                VALUES (DEFAULT, 'Perigo', 'Ambos acima de 80%', DEFAULT, {idRegistro}, {idEquipamento})""")
+            repeticao_CPU_RAM += 1
+        elif 50 < porcent_cpu <= 80 and 50 < memoria.percent <= 80:
+            cursor.execute(f"""INSERT INTO Alerta 
+                VALUES (DEFAULT, 'Alerta', 'Ambos entre 50% e 80%', DEFAULT, {idRegistro}, {idEquipamento})""")
+        elif memoria.percent > 80:
+            cursor.execute(f"""INSERT INTO Alerta 
+                VALUES (DEFAULT, 'Perigo', 'Memória RAM acima de 80%', DEFAULT, {idRegistro}, {idEquipamento})""")
+            repeticao_RAM += 1
+        elif 50 < memoria.percent <= 80:
+            cursor.execute(f"""INSERT INTO Alerta 
+                VALUES (DEFAULT, 'Alerta', 'Memória RAM entre 50% e 80%', DEFAULT, {idRegistro}, {idEquipamento})""")
+        elif porcent_cpu > 80:
+            cursor.execute(f"""INSERT INTO Alerta 
+                VALUES (DEFAULT, 'Perigo', 'CPU acima de 80%', DEFAULT, {idRegistro}, {idEquipamento})""")
+            repeticao_CPU += 1
+        elif 50 < porcent_cpu <= 80:
+            cursor.execute(f"""INSERT INTO Alerta 
+                VALUES (DEFAULT, 'Alerta', 'CPU entre 50% e 80%', DEFAULT, {idRegistro}, {idEquipamento})""")
+        
+        mydb.commit()
 
-                repeticao_CPU_RAM=0
+            
 
-        elif (round(memoria.percent, 2) > 80):
-            cursor.execute(f"INSERT INTO Alerta VALUES (DEFAULT, 'Memória', 'Memória RAM acima de 80%', DEFAULT, {idRegistro}, {idEquipamento})")
-            mydb.commit()
-            repeticao_RAM+=1
+        if(repeticao_CPU_RAM >= 5):            
+            jira.issue_create(
+                fields={
+                    'project': {
+                        'key': 'VAULT' #SIGLA DO PROJETO
+                    },
+                    'summary': 'Alerta de CPU e RAM',
+                    'description': 'CPU e RAM acima da média, necessario olhar com atenção esse Caixa em específico caso precise de manutenção em breve',
+                    'issuetype': {
+                    "name": "Task"
+                    },
+                }
+            )
 
-            if(repeticao_RAM >= 5):
+            repeticao_CPU_RAM=0
+
+    
+
+        elif(repeticao_RAM >= 5):        
+            jira.issue_create(
+                fields= {
+                'project': {
+                    'key': 'VAULT' #SIGLA DO PROJETO
+                },
+                'summary': 'Alerta de RAM',
+                'description': 'Memória RAM acima da média, analisar comportamento estranho e verificar se é frequente',
+                'issuetype': {
+                "name": "Task"
+                },
+                }
+            )
                 
-                jira.issue_create(
-                        fields={
-                        'project': {
-                            'key': 'VAULT' #SIGLA DO PROJETO
-                        },
-                        'summary': 'Alerta de RAM',
-                        'description': 'Memória RAM acima da média, analisar comportamento estranho e verificar se é frequente',
-                        'issuetype': {
-                            "name": "Task"
-                        },
-                    }
-                )
-                
-                repeticao_RAM=0
+            repeticao_RAM=0
 
-        elif(round(porcent_cpu, 2) > 80):
-            cursor.execute(f"INSERT INTO Alerta VALUES (DEFAULT, 'CPU', 'CPU acima de 80%', DEFAULT, {idRegistro}, {idEquipamento})")
-            mydb.commit()
-            repeticao_CPU+=1
 
-            if(repeticao_CPU >= 5):
 
-                jira.issue_create(
-                    fields={
-                        'project': {
-                            'key': 'VAULT' #SIGLA DO PROJETO
-                        },
-                        'summary': 'Alerta de CPU',
-                        'description': 'Processador acima da média, possível ataque no Caixa ou erro de Hardware.',
-                        'issuetype': {
-                            "name": "Task"
-                        },
-                    }
-                )
+        elif(repeticao_CPU >= 5):
+            jira.issue_create(
+                fields={
+                    'project': {
+                        'key': 'VAULT' #SIGLA DO PROJETO
+                    },
+                    'summary': 'Alerta de CPU',
+                    'description': 'Processador acima da média, possível ataque no Caixa ou erro de Hardware.',
+                    'issuetype': {
+                    "name": "Task"
+                    },
+                }
+            )
 
-                repeticao_CPU=0
+            repeticao_CPU=0
 
         captura = {
             "idCaixaEletronico": idEquipamento,
